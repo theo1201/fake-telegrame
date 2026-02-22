@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bank-fastapi
+    runtime: python
+    plan: free  # 或 starter/standard 等付费计划
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # 如果需要其他环境变量，在这里添加
+      # - key: DATABASE_URL
+      #   value: postgresql://...
+

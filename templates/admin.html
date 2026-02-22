@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAST Admin Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0e0e10;
+      --bg-card: #1a1a1e;
+      --bg-input: #26262a;
+      --border: #333338;
+      --text: #f0f0f0;
+      --text-dim: #8e8e93;
+      --green: #30d158;
+      --red: #ff453a;
+      --blue: #0a84ff;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- Layout ---- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: #131316;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .topbar .badge {
+      font-size: 12px;
+      background: var(--green);
+      color: #000;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ---- Section ---- */
+    .section {
+      background: var(--bg-card);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- Balance Card ---- */
+    .balance-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(48,209,88,0.12) 0%, rgba(48,209,88,0.03) 100%);
+      border: 1px solid rgba(48,209,88,0.2);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .balance-card .currency {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 2px;
+    }
+
+    .balance-card .amount {
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .balance-card .edit-balance {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .balance-card .edit-balance input {
+      width: 140px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    /* ---- Form ---- */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid.full {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group.span-2 {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      color: #fff;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .btn-primary { background: var(--blue); }
+    .btn-success { background: var(--green); color: #000; }
+    .btn-danger  { background: var(--red); }
+    .btn-ghost   { background: var(--bg-input); border: 1px solid var(--border); }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* ---- Table ---- */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .type-sent     { background: rgba(255,69,58,0.15); color: var(--red); }
+    .type-received { background: rgba(48,209,88,0.15); color: var(--green); }
+    .type-fee      { background: rgba(142,142,147,0.15); color: var(--text-dim); }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ---- Modal ---- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 28px;
+      width: 460px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--green);
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 200;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 12px 16px;
+      }
+      
+      .topbar h1 {
+        font-size: 16px;
+      }
+      
+      .container {
+        padding: 16px 12px 60px;
+      }
+      
+      .section {
+        padding: 16px;
+        border-radius: 12px;
+      }
+      
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .section-header > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+      }
+      
+      .form-grid { 
+        grid-template-columns: 1fr; 
+      }
+      
+      .form-group.span-2 { 
+        grid-column: auto; 
+      }
+      
+      .balance-card { 
+        flex-direction: column; 
+        align-items: flex-start;
+        padding: 16px;
+      }
+      
+      .balance-card .amount {
+        font-size: 28px;
+      }
+      
+      .balance-card .edit-balance { 
+        margin-left: 0;
+        width: 100%;
+        margin-top: 8px;
+      }
+      
+      .balance-card .edit-balance input {
+        flex: 1;
+        width: 100%;
+      }
+      
+      /* 表格在移动端的优化 */
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      table {
+        min-width: 600px;
+      }
+      
+      th, td {
+        padding: 8px;
+        font-size: 12px;
+      }
+      
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 11px;
+      }
+      
+      /* 模态框在移动端的优化 */
+      .modal {
+        width: 95vw;
+        max-height: 85vh;
+        padding: 20px;
+      }
+      
+      .modal h3 {
+        font-size: 16px;
+      }
+      
+      .modal-actions {
+        flex-direction: column-reverse;
+      }
+      
+      .modal-actions .btn {
+        width: 100%;
+      }
+      
+      /* Toast 在移动端的位置 */
+      .toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        font-size: 13px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .topbar h1 {
+        font-size: 14px;
+      }
+      
+      .section-title {
+        font-size: 14px;
+      }
+      
+      .balance-card .amount {
+        font-size: 24px;
+      }
+      
+      .btn {
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <h1>KAST Admin</h1>
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span class="badge">Running</span>
+    <button class="btn btn-ghost btn-sm" onclick="logout()" style="padding: 6px 12px;">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ========== ACCOUNT SECTION ========== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Account &amp; Balance</span>
+      <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
+    </div>
+
+    <!-- Balance -->
+    <div class="balance-card">
+      <div>
+        <div class="currency" id="disp-currency">USD</div>
+        <div class="amount">$ <span id="disp-balance">0.00</span></div>
+      </div>
+      <div class="edit-balance">
+        <label style="margin-bottom:0">Balance</label>
+        <input type="number" step="0.01" id="input-balance" />
+      </div>
+    </div>
+
+    <!-- Account Details -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Holder Name</label>
+        <input type="text" id="input-holder_name" />
+      </div>
+      <div class="form-group">
+        <label>Currency</label>
+        <input type="text" id="input-currency" />
+      </div>
+      <div class="form-group">
+        <label>Account Number</label>
+        <input type="text" id="input-account_number" />
+      </div>
+      <div class="form-group">
+        <label>Routing Number</label>
+        <input type="text" id="input-routing_number" />
+      </div>
+      <div class="form-group span-2">
+        <label>Holder Address</label>
+        <input type="text" id="input-holder_address" />
+      </div>
+      <div class="form-group">
+        <label>Bank Name</label>
+        <input type="text" id="input-bank_name" />
+      </div>
+      <div class="form-group">
+        <label>Country</label>
+        <input type="text" id="input-country" />
+      </div>
+      <div class="form-group span-2">
+        <label>Bank Address</label>
+        <input type="text" id="input-bank_address" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PERSONAL DETAILS SECTION ========== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Personal Details</span>
+      <button class="btn btn-primary btn-sm" onclick="saveAccount()">Save Changes</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="input-first_name" />
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="input-last_name" />
+      </div>
+      <div class="form-group">
+        <label>Date of Birth</label>
+        <input type="text" id="input-date_of_birth" placeholder="3 Dec 1998" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="input-email" />
+      </div>
+      <div class="form-group span-2">
+        <label>Phone Number</label>
+        <input type="text" id="input-phone_number" placeholder="+18633890587" />
+      </div>
+      <div class="form-group span-2">
+        <label>Address</label>
+        <input type="text" id="input-address" placeholder="123 Main St, San Francisco, CA 94102" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TRANSACTIONS SECTION ========== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Transactions</span>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-danger btn-sm" onclick="clearAllTransactions()">🗑️ Clear All</button>
+        <button class="btn btn-primary btn-sm" onclick="openGenerateTx()">⚡ Auto Generate</button>
+        <button class="btn btn-success btn-sm" onclick="openAddTx()">+ Add Transaction</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Currency</th>
+            <th>Counterparty</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tx-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== TRANSACTION MODAL ========== -->
+<div class="modal-overlay" id="tx-modal">
+  <div class="modal">
+    <h3 id="modal-title">Add Transaction</h3>
+    <input type="hidden" id="modal-tx-id" />
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="modal-tx_type">
+          <option value="sent">Sent</option>
+          <option value="received">Received</option>
+          <option value="fee">Fee</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" step="0.01" id="modal-amount" />
+      </div>
+      <div class="form-group">
+        <label>Currency</label>
+        <input type="text" id="modal-currency" value="USD" />
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="text" id="modal-date" placeholder="08 Feb - 01:44 PM" />
+      </div>
+      <div class="form-group span-2">
+        <label>Counterparty (Address)</label>
+        <input type="text" id="modal-counterparty" placeholder="AZVQ...C8bB" />
+      </div>
+      <div class="form-group span-2">
+        <label>Description</label>
+        <input type="text" id="modal-description" />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTx()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== GENERATE TRANSACTIONS MODAL ========== -->
+<div class="modal-overlay" id="generate-modal">
+  <div class="modal">
+    <h3>Auto Generate Transactions</h3>
+    
+    <div class="form-grid full">
+      <div class="form-group">
+        <label>Minimum Transactions</label>
+        <input type="number" min="1" step="1" id="generate-min-count" placeholder="10" value="10" />
+        <small style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">至少生成多少笔交易</small>
+      </div>
+      <div class="form-group">
+        <label>Minimum Sent Transactions</label>
+        <input type="number" min="0" step="1" id="generate-min-sent-count" placeholder="0" value="0" />
+        <small style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">至少生成多少笔支出交易</small>
+      </div>
+      <div class="form-group">
+        <label>Max Amount Per Transaction</label>
+        <input type="number" min="0.01" step="0.01" id="generate-max-amount" placeholder="100.00" value="100.00" />
+        <small style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">单笔交易最大金额</small>
+      </div>
+      <div class="form-group">
+        <label>Start Time (Optional)</label>
+        <input type="datetime-local" id="generate-start-time" step="60" />
+        <small style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">从这个时间之后生成流水（精确到分钟），留空则从 30 天前开始</small>
+      </div>
+      <div class="form-group" style="font-size: 13px; color: var(--text-dim); margin-top: 8px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+        <strong>Current Balance Setting:</strong> $<span id="target-balance-display">0.00</span><br>
+        <strong>Actual Balance (from transactions):</strong> $<span id="actual-balance-display">0.00</span><br>
+        <strong>Difference:</strong> <span id="difference-display">$0.00</span><br><br>
+        <span style="color: var(--red);">⚠️ 注意：生成时会先清空所有现有交易记录，然后重新生成。</span><br>
+        系统会生成至少指定笔数的交易，每笔金额不超过设定的最大值，总金额会达到目标余额。
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeGenerateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="generateTransactions()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';  // same origin
+
+// ---- Toast ----
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => el.className = 'toast', 2500);
+}
+
+// ---- Account ----
+const accountFields = [
+  'holder_name', 'account_number', 'routing_number',
+  'holder_address', 'bank_name', 'bank_address', 'country', 'currency',
+  'first_name', 'last_name', 'date_of_birth', 'email', 'phone_number', 'address'
+];
+
+async function loadAccount() {
+  const res = await fetch(API + '/api/account');
+  const data = await res.json();
+
+  document.getElementById('disp-balance').textContent = Number(data.balance).toFixed(2);
+  document.getElementById('disp-currency').textContent = data.currency;
+  document.getElementById('input-balance').value = data.balance;
+
+  accountFields.forEach(f => {
+    const el = document.getElementById('input-' + f);
+    if (el) el.value = data[f] || '';
+  });
+}
+
+async function saveAccount() {
+  const body = { balance: parseFloat(document.getElementById('input-balance').value) };
+  accountFields.forEach(f => {
+    const el = document.getElementById('input-' + f);
+    if (el) body[f] = el.value;
+  });
+
+  const res = await fetch(API + '/api/account', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    toast('Account saved');
+    loadAccount();
+  } else {
+    toast('Save failed', true);
+  }
+}
+
+// ---- Transactions ----
+async function loadTransactions() {
+  const res = await fetch(API + '/api/transactions');
+  const data = await res.json();
+  const tbody = document.getElementById('tx-tbody');
+
+  tbody.innerHTML = data.map(tx => `
+    <tr>
+      <td>${tx.id}</td>
+      <td><span class="type-badge type-${tx.tx_type}">${tx.tx_type}</span></td>
+      <td style="font-weight:600;${tx.tx_type === 'received' ? 'color:var(--green)' : tx.tx_type === 'sent' ? 'color:var(--red)' : ''}">
+        ${tx.tx_type === 'received' ? '+' : tx.tx_type === 'sent' ? '-' : ''}${Number(tx.amount).toFixed(2)}
+      </td>
+      <td>${tx.currency}</td>
+      <td style="font-size:13px;color:var(--text-dim)">${tx.counterparty || '—'}</td>
+      <td style="font-size:13px">${tx.date}</td>
+      <td style="font-size:13px;color:var(--text-dim)">${tx.description || ''}</td>
+      <td>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditTx(${tx.id})">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTx(${tx.id})">Del</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ---- Modal ----
+function openAddTx() {
+  document.getElementById('modal-title').textContent = 'Add Transaction';
+  document.getElementById('modal-tx-id').value = '';
+  document.getElementById('modal-tx_type').value = 'sent';
+  document.getElementById('modal-amount').value = '';
+  document.getElementById('modal-currency').value = 'USD';
+  document.getElementById('modal-date').value = '';
+  document.getElementById('modal-counterparty').value = '';
+  document.getElementById('modal-description').value = '';
+  document.getElementById('tx-modal').classList.add('active');
+}
+
+async function openEditTx(id) {
+  const res = await fetch(API + '/api/transactions');
+  const data = await res.json();
+  const tx = data.find(t => t.id === id);
+  if (!tx) return;
+
+  document.getElementById('modal-title').textContent = 'Edit Transaction #' + id;
+  document.getElementById('modal-tx-id').value = id;
+  document.getElementById('modal-tx_type').value = tx.tx_type;
+  document.getElementById('modal-amount').value = tx.amount;
+  document.getElementById('modal-currency').value = tx.currency;
+  document.getElementById('modal-date').value = tx.date;
+  document.getElementById('modal-counterparty').value = tx.counterparty;
+  document.getElementById('modal-description').value = tx.description;
+  document.getElementById('tx-modal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('tx-modal').classList.remove('active');
+}
+
+async function saveTx() {
+  const id = document.getElementById('modal-tx-id').value;
+  const body = {
+    tx_type: document.getElementById('modal-tx_type').value,
+    amount: parseFloat(document.getElementById('modal-amount').value) || 0,
+    currency: document.getElementById('modal-currency').value,
+    date: document.getElementById('modal-date').value,
+    counterparty: document.getElementById('modal-counterparty').value,
+    description: document.getElementById('modal-description').value,
+  };
+
+  let res;
+  if (id) {
+    res = await fetch(API + '/api/transactions/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } else {
+    res = await fetch(API + '/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
+
+  if (res.ok) {
+    toast(id ? 'Transaction updated' : 'Transaction created');
+    closeModal();
+    loadTransactions();
+  } else {
+    toast('Save failed', true);
+  }
+}
+
+async function deleteTx(id) {
+  if (!confirm('Delete transaction #' + id + '?')) return;
+
+  const res = await fetch(API + '/api/transactions/' + id, { method: 'DELETE' });
+  if (res.ok) {
+    toast('Transaction deleted');
+    loadTransactions();
+  } else {
+    toast('Delete failed', true);
+  }
+}
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', () => {
+  loadAccount();
+  loadTransactions();
+});
+
+// Close modal on overlay click
+document.getElementById('tx-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.getElementById('generate-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeGenerateModal();
+});
+
+// ---- Generate Transactions ----
+async function openGenerateTx() {
+  // 获取目标余额（账户设置的余额）
+  const targetBalance = parseFloat(document.getElementById('input-balance').value) || 0;
+  document.getElementById('target-balance-display').textContent = targetBalance.toFixed(2);
+  
+  // 计算实际余额（从交易列表计算）
+  const res = await fetch(API + '/api/transactions');
+  const transactions = await res.json();
+  
+  let actualBalance = 0;
+  transactions.forEach(tx => {
+    if (tx.tx_type === 'received') {
+      actualBalance += tx.amount;
+    } else if (tx.tx_type === 'sent') {
+      actualBalance -= tx.amount;
+    }
+  });
+  
+  document.getElementById('actual-balance-display').textContent = actualBalance.toFixed(2);
+  
+  const difference = targetBalance - actualBalance;
+  const diffText = difference >= 0 ? `+$${difference.toFixed(2)}` : `-$${Math.abs(difference).toFixed(2)}`;
+  document.getElementById('difference-display').textContent = diffText;
+  document.getElementById('difference-display').style.color = difference >= 0 ? 'var(--green)' : 'var(--red)';
+  
+  document.getElementById('generate-min-count').value = '10';
+  document.getElementById('generate-min-sent-count').value = '0';
+  document.getElementById('generate-max-amount').value = '100.00';
+  document.getElementById('generate-start-time').value = '';
+  document.getElementById('generate-modal').classList.add('active');
+}
+
+function closeGenerateModal() {
+  document.getElementById('generate-modal').classList.remove('active');
+}
+
+async function generateTransactions() {
+  const minCount = parseInt(document.getElementById('generate-min-count').value);
+  const minSentCount = parseInt(document.getElementById('generate-min-sent-count').value);
+  const maxAmount = parseFloat(document.getElementById('generate-max-amount').value);
+  
+  if (isNaN(minCount) || minCount < 1) {
+    toast('Please enter a valid minimum count (at least 1)', true);
+    return;
+  }
+  
+  if (isNaN(minSentCount) || minSentCount < 0) {
+    toast('Please enter a valid minimum sent count (non-negative)', true);
+    return;
+  }
+  
+  if (minSentCount > minCount) {
+    toast('Minimum sent count cannot be greater than minimum total count', true);
+    return;
+  }
+  
+  if (isNaN(maxAmount) || maxAmount <= 0) {
+    toast('Please enter a valid max amount (greater than 0)', true);
+    return;
+  }
+
+  // 先清空所有交易
+  const clearRes = await fetch(API + '/api/transactions/clear', {
+    method: 'DELETE',
+  });
+  
+  if (!clearRes.ok) {
+    toast('Failed to clear existing transactions', true);
+    return;
+  }
+
+  // 然后生成新的交易
+  let url = API + `/api/transactions/generate?min_count=${minCount}&max_amount=${maxAmount}&min_sent_count=${minSentCount}`;
+  const startTime = document.getElementById('generate-start-time').value;
+  if (startTime) {
+    url += `&start_time=${encodeURIComponent(startTime)}`;
+  }
+  const res = await fetch(url, {
+    method: 'POST',
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    toast(`${data.message} (received: ${data.received_count}, sent: ${data.sent_count})`);
+    closeGenerateModal();
+    loadAccount();
+    loadTransactions();
+  } else {
+    const error = await res.json();
+    toast(error.detail || 'Generation failed', true);
+  }
+}
+
+// ---- Clear All Transactions ----
+async function clearAllTransactions() {
+  if (!confirm('Are you sure you want to delete ALL transactions? This cannot be undone.')) {
+    return;
+  }
+
+  const res = await fetch(API + '/api/transactions/clear', {
+    method: 'DELETE',
+  });
+
+  if (res.ok) {
+    const data = await res.json();
+    toast(data.message);
+    loadTransactions();
+  } else {
+    toast('Clear failed', true);
+  }
+}
+
+// ---- Logout ----
+function logout() {
+  window.location.href = '/admin/logout';
+}
+</script>
+
+</body>
+</html>
