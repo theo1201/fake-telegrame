@@ -1,14 +1,24 @@
 services:
+  # PostgreSQL 数据库（免费计划可用，数据持久化）
+  - type: pg
+    name: bank-fastapi-db
+    plan: free  # PostgreSQL 免费计划支持持久化存储
+    databaseName: bankfastapi
+    databaseUser: bankfastapi_user
+
+  # Web 服务
   - type: web
     name: bank-fastapi
     runtime: python
-    plan: free  # 或 starter/standard 等付费计划
+    plan: free  # 免费计划会自动休眠，但数据库数据会保留
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      # 如果需要其他环境变量，在这里添加
-      # - key: DATABASE_URL
-      #   value: postgresql://...
+      # DATABASE_URL 会自动从 PostgreSQL 服务注入
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bank-fastapi-db
+          property: connectionString
 
